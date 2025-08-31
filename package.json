@@ -1,0 +1,16 @@
+{
+  "name": "blog-RestAPI",
+  "version": "1.0.0",
+  "description": "API RESTful de blog personnel avec Node.js, TypeScript, Express et PostgreSQL",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage"
+  },
+  "keywords": ["blog", "api", "rest", "typescript", "express", "postgresql"],
+  "author": "",
+  "license": "MIT"
+}
