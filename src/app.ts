@@ -6,23 +6,26 @@ import errorHandler from "./middlewares/errorHandler";
 
 const app: Application = express();
 
-/** Middlewares de securite en premier */
 app.use(helmet());
 app.use(cors());
-
-/** Logger HTTP avant tout parsing pour capturer toutes les requetes */
 app.use(morgan("dev"));
-
-/** Parsing du corps des requetes */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/** Route de base pour verifier que le serveur repond */
 app.get("/", (_req: Request, res: Response) => {
   res.json({ message: "Blog RestAPI is running" });
 });
 
-/** Gestionnaire d erreurs global en dernier */
+// Route de sante pour verifier l etat du serveur
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
+});
+
 app.use(errorHandler);
 
 export default app;
