@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import AppError from "../utils/AppError";
 import { env } from "../config/env";
 
-// Gestionnaire d erreurs global branche en dernier middleware dans app.ts
+/** Gestionnaire d erreurs global branche en dernier middleware dans app.ts */
 const errorHandler = (
   err: Error | AppError,
   _req: Request,
@@ -10,14 +10,16 @@ const errorHandler = (
   _next: NextFunction
 ): void => {
   if (err instanceof AppError) {
+    /** 4xx = fail (erreur du client), 5xx = error (erreur serveur) */
+    const status = err.statusCode < 500 ? "fail" : "error";
+
     res.status(err.statusCode).json({
-      status: "error",
+      status,
       message: err.message,
     });
     return;
   }
 
-  // Erreur systeme non anticipee : on log le detail en dev, on cache en prod
   console.error(err);
 
   res.status(500).json({
