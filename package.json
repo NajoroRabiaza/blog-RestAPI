@@ -4,7 +4,7 @@
   "description": "API RESTful de blog personnel avec Node.js, TypeScript, Express et PostgreSQL",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest --runInBand",
