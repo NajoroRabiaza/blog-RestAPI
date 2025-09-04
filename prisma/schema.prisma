@@ -39,6 +39,8 @@ model Article {
 
   comments    Comment[]
   tags        ArticleTag[]
+
+  @@index([authorId])
 }
 
 model Comment {
