@@ -1,5 +1,6 @@
 import { env } from "./config/env";
 import app from "./app";
+import prisma from "./config/database";
 
 const server = app.listen(env.port, () => {
   console.log(`Serveur demarre sur le port ${env.port} en mode ${env.nodeEnv}`);
@@ -16,20 +17,22 @@ process.on("unhandledRejection", (reason: unknown) => {
   process.exit(1);
 });
 
-// Arret propre du serveur sur signal SIGTERM
+// Arret propre avec deconnexion Prisma sur SIGTERM
 process.on("SIGTERM", () => {
   console.log("Signal SIGTERM recu, arret du serveur en cours...");
-  server.close(() => {
-    console.log("Serveur arrete proprement");
+  server.close(async () => {
+    await prisma.$disconnect();
+    console.log("Serveur et base de donnees arretes proprement");
     process.exit(0);
   });
 });
 
-// Arret propre du serveur sur signal SIGINT (Ctrl+C)
+// Arret propre avec deconnexion Prisma sur SIGINT
 process.on("SIGINT", () => {
   console.log("Signal SIGINT recu, arret du serveur en cours...");
-  server.close(() => {
-    console.log("Serveur arrete proprement");
+  server.close(async () => {
+    await prisma.$disconnect();
+    console.log("Serveur et base de donnees arretes proprement");
     process.exit(0);
   });
 });

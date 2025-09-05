@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 
-// Singleton Prisma pour eviter plusieurs instances en developpement
+// singleton pour eviter plusieurs pools de connexions en developpement
 const prisma = new PrismaClient({
   log: ["error", "warn"],
 });
