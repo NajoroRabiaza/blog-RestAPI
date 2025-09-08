@@ -18,7 +18,7 @@ const createUser = async (data: {
   });
 };
 
-// recherche un utilisateur par email, retourne le mot de passe pour la verification
+// recherche un utilisateur par email avec mot de passe pour la verification au login
 const findUserByEmail = async (email: string) => {
   return prisma.user.findUnique({
     where: { email },
@@ -27,6 +27,20 @@ const findUserByEmail = async (email: string) => {
       email: true,
       username: true,
       password: true,
+      role: true,
+      createdAt: true,
+    },
+  });
+};
+
+// recherche un utilisateur par email sans mot de passe pour les autres usages
+const findUserByEmailSafe = async (email: string) => {
+  return prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      username: true,
       role: true,
       createdAt: true,
     },
@@ -50,5 +64,6 @@ const findUserById = async (id: number) => {
 export default {
   createUser,
   findUserByEmail,
+  findUserByEmailSafe,
   findUserById,
 };
