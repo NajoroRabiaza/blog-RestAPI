@@ -3,7 +3,7 @@ import userRepository from "../repositories/user.repository";
 import jwtUtils from "../utils/jwt";
 import AppError from "../utils/AppError";
 
-// enregistrement du nouvel utilisateur avec hashage du mot de passe
+// enregistrement de nouvel user avec hashage du mot de passe
 const registerUser = async (data: {
   email: string;
   password: string;
@@ -32,6 +32,31 @@ const registerUser = async (data: {
   return { user, token };
 };
 
+// verification des credentials et generation d un token pour le login
+const loginUser = async (data: { email: string; password: string }) => {
+  const user = await userRepository.findUserByEmail(data.email);
+  if (!user) {
+    throw new AppError("Email ou mot de passe incorrect", 401);
+  }
+
+  const isPasswordValid = await bcrypt.compare(data.password, user.password);
+  if (!isPasswordValid) {
+    throw new AppError("Email ou mot de passe incorrect", 401);
+  }
+
+  const token = jwtUtils.generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  // on ne retourne pas le mot de passe dans la reponse
+  const { password: _, ...userWithoutPassword } = user;
+
+  return { user: userWithoutPassword, token };
+};
+
 export default {
   registerUser,
+  loginUser,
 };
