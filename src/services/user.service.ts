@@ -3,7 +3,7 @@ import userRepository from "../repositories/user.repository";
 import jwtUtils from "../utils/jwt";
 import AppError from "../utils/AppError";
 
-// enregistrement de nouvel user avec hashage du mot de passe
+// enregistrement d un nouvel utilisateur avec hashage du mot de passe
 const registerUser = async (data: {
   email: string;
   password: string;
@@ -39,7 +39,14 @@ const loginUser = async (data: { email: string; password: string }) => {
     throw new AppError("Email ou mot de passe incorrect", 401);
   }
 
-  const isPasswordValid = await bcrypt.compare(data.password, user.password);
+  let isPasswordValid = false;
+
+  try {
+    isPasswordValid = await bcrypt.compare(data.password, user.password);
+  } catch {
+    throw new AppError("Email ou mot de passe incorrect", 401);
+  }
+
   if (!isPasswordValid) {
     throw new AppError("Email ou mot de passe incorrect", 401);
   }
