@@ -2,8 +2,9 @@ import bcrypt from "bcryptjs";
 import userRepository from "../repositories/user.repository";
 import jwtUtils from "../utils/jwt";
 import AppError from "../utils/AppError";
+import redis from "../config/redis";
 
-// enregistrement d un nouvel utilisateur avec hashage du mot de passe
+// enregistrement de nouvel user avec hashage du mot de passe
 const registerUser = async (data: {
   email: string;
   password: string;
@@ -57,13 +58,19 @@ const loginUser = async (data: { email: string; password: string }) => {
     role: user.role,
   });
 
-  // on ne retourne pas le mot de passe dans la reponse
   const { password: _, ...userWithoutPassword } = user;
 
   return { user: userWithoutPassword, token };
 };
 
-export default {
-  registerUser,
-  loginUser,
+// invalidation du token lorsqu'on le place en blacklist Redis jusqu'a son expiration
+const logoutUser = async (token: string): Promise<void> => {
+  const ttl = jwtUtils.getTokenRemainingTTL(token);
+
+  // si le token est deja expire on ne le stocke pas en Redis
+  if (ttl <= 0) return;
+
+  await redis.set(`blacklist:${token}`, "1", "EX", ttl);
 };
+
+export default { registerUser, loginUser, logoutUser };
