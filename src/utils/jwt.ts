@@ -33,8 +33,13 @@ const getTokenRemainingTTL = (token: string): number => {
   try {
     const decoded = jwt.decode(token) as JwtPayload;
     if (!decoded?.exp) return 0;
-    const remainingSeconds = decoded.exp - Math.floor(Date.now() / 1000);
-    return remainingSeconds > 0 ? remainingSeconds : 0;
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // si le token est deja expire on retourne 0 pour ne pas stocker en Redis
+    if (decoded.exp <= now) return 0;
+
+    return decoded.exp - now;
   } catch {
     return 0;
   }
