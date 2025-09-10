@@ -3,6 +3,7 @@ import userRepository from "../repositories/user.repository";
 import jwtUtils from "../utils/jwt";
 import AppError from "../utils/AppError";
 import redis from "../config/redis";
+import { env } from "../config/env";
 
 // enregistrement de nouvel user avec hashage du mot de passe
 const registerUser = async (data: {
@@ -63,14 +64,20 @@ const loginUser = async (data: { email: string; password: string }) => {
   return { user: userWithoutPassword, token };
 };
 
-// invalidation du token lorsqu'on le place en blacklist Redis jusqu'a son expiration
+// invalidation du token en le placant en blacklist Redis jusqu a son expiration
 const logoutUser = async (token: string): Promise<void> => {
   const ttl = jwtUtils.getTokenRemainingTTL(token);
 
-  // si le token est deja expire on ne le stocke pas en Redis
   if (ttl <= 0) return;
 
-  await redis.set(`blacklist:${token}`, "1", "EX", ttl);
+  // Math.floor pour garantir un entier valide pour la commande EX de Redis
+  const ttlSeconds = Math.floor(ttl);
+
+  await redis.set(`blacklist:${token}`, "1", "EX", ttlSeconds);
+
+  if (env.nodeEnv === "development") {
+    console.log(`Token blackliste pour ${ttlSeconds} secondes`);
+  }
 };
 
 export default { registerUser, loginUser, logoutUser };
