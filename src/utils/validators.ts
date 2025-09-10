@@ -8,7 +8,7 @@ const registerSchema = Joi.object({
   }),
   password: Joi.string()
     .min(8)
-    .pattern(/^(?=.*[0-9])(?=.*[a-zA-Z])/)
+    .pattern(/^(?=.*[0-9])(?=.*[a-zA-Z]).{8,}$/)
     .required()
     .messages({
       "string.min": "Le mot de passe doit contenir au moins 8 caracteres",
@@ -16,11 +16,18 @@ const registerSchema = Joi.object({
         "Le mot de passe doit contenir au moins une lettre et un chiffre",
       "any.required": "Le mot de passe est obligatoire",
     }),
-  username: Joi.string().min(3).max(30).required().messages({
-    "string.min": "Le nom d utilisateur doit contenir au moins 3 caracteres",
-    "string.max": "Le nom d utilisateur ne peut pas depasser 30 caracteres",
-    "any.required": "Le nom d utilisateur est obligatoire",
-  }),
+  username: Joi.string()
+    .min(3)
+    .max(30)
+    .pattern(/^[a-zA-Z0-9_-]+$/)
+    .required()
+    .messages({
+      "string.min": "Le nom d utilisateur doit contenir au moins 3 caracteres",
+      "string.max": "Le nom d utilisateur ne peut pas depasser 30 caracteres",
+      "string.pattern.base":
+        "Le nom d utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores",
+      "any.required": "Le nom d utilisateur est obligatoire",
+    }),
 });
 
 // schema de validation pour la connexion
