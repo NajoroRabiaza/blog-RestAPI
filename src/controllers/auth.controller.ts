@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import userService from "../services/user.service";
-
-type AsyncController = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<void>;
+import { AsyncController } from "../types";
 
 // inscription d'un nouvel utilisateur
 const register: AsyncController = async (req, res, next) => {
