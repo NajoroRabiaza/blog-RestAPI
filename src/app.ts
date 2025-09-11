@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import errorHandler from "./middlewares/errorHandler";
+import authRoutes from "./routes/auth.routes";
 
 const app: Application = express();
 
@@ -17,7 +18,6 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.get("/health", (_req: Request, res: Response) => {
-  // Math.floor pour eviter un flottant difficile a lire dans les logs
   res.json({
     status: "ok",
     uptime: Math.floor(process.uptime()),
@@ -25,6 +25,9 @@ app.get("/health", (_req: Request, res: Response) => {
     environment: process.env.NODE_ENV,
   });
 });
+
+// routes d'authentification
+app.use("/auth", authRoutes);
 
 app.use(errorHandler);
 
