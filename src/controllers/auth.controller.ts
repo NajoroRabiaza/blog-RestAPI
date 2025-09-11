@@ -1,4 +1,3 @@
-import { Request, Response, NextFunction } from "express";
 import userService from "../services/user.service";
 import { AsyncController } from "../types";
 
@@ -6,11 +5,11 @@ import { AsyncController } from "../types";
 const register: AsyncController = async (req, res, next) => {
   try {
     const { email, password, username } = req.body;
-    const result = await userService.registerUser({ email, password, username });
+    const { user, token } = await userService.registerUser({ email, password, username });
 
     res.status(201).json({
       status: "success",
-      data: result,
+      data: { user, token },
     });
   } catch (err) {
     next(err);
@@ -21,11 +20,10 @@ const register: AsyncController = async (req, res, next) => {
 const login: AsyncController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const result = await userService.loginUser({ email, password });
-
+    const { user, token } = await userService.loginUser({ email, password });
     res.status(200).json({
       status: "success",
-      data: result,
+      data: { user, token },
     });
   } catch (err) {
     next(err);
