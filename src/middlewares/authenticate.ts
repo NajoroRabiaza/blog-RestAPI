@@ -3,7 +3,6 @@ import jwtUtils from "../utils/jwt";
 import redis from "../config/redis";
 import AppError from "../utils/AppError";
 
-// extension de l'interface Request pour ajouter l'utilisateur authentifie
 declare global {
   namespace Express {
     interface Request {
@@ -23,11 +22,16 @@ const authenticate = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return next(new AppError("Token d authentification manquant", 401));
     }
+
     const token = authHeader.split(" ")[1];
+
+    // token vide apres Bearer
+    if (!token || token.trim() === "") {
+      return next(new AppError("Token d authentification manquant", 401));
+    }
 
     // verification si le token est en blacklist Redis
     const isBlacklisted = await redis.get(`blacklist:${token}`);
@@ -40,7 +44,6 @@ const authenticate = async (
       return next(new AppError("Token invalide ou expire", 401));
     }
 
-    // decoration de req.user pour les middlewares et controllers suivants
     req.user = {
       id: payload.id,
       email: payload.email,
