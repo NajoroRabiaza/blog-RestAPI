@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwtUtils from "../utils/jwt";
 import redis from "../config/redis";
 import AppError from "../utils/AppError";
+import { env } from "../config/env";
 
 declare global {
   namespace Express {
@@ -28,15 +29,20 @@ const authenticate = async (
 
     const token = authHeader.split(" ")[1];
 
-    // token vide apres Bearer
     if (!token || token.trim() === "") {
       return next(new AppError("Token d authentification manquant", 401));
     }
 
-    // verification si le token est en blacklist Redis
-    const isBlacklisted = await redis.get(`blacklist:${token}`);
-    if (isBlacklisted) {
-      return next(new AppError("Token invalide ou expire", 401));
+    // si Redis est indisponible on log et on continue sans verifier la blacklist
+    try {
+      const isBlacklisted = await redis.get(`blacklist:${token}`);
+      if (isBlacklisted) {
+        return next(new AppError("Token invalide ou expire", 401));
+      }
+    } catch (redisErr) {
+      if (env.nodeEnv === "development") {
+        console.error("Redis indisponible, verification blacklist ignoree :", redisErr);
+      }
     }
 
     const payload = jwtUtils.verifyToken(token);
