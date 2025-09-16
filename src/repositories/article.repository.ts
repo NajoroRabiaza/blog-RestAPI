@@ -152,4 +152,61 @@ const findAllArticles = async (options: FindAllOptions = {}) => {
   };
 };
 
-export default { createArticle, findArticleById, findArticleBySlug, findAllArticles };
+// mise a jour partielle d'un article, seuls les champs fournis sont modifies
+const updateArticle = async (
+    id: number,
+    data: Partial<{
+      title: string;
+      slug: string;
+      content: string;
+      published: boolean;
+      publishedAt: Date | null;
+    }>
+  ) => {
+    return prisma.article.update({
+      where: { id },
+      data,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+};
+  
+// suppression d'un article et de ses donnees associees en cascade
+const deleteArticle = async (id: number) => {
+    return prisma.article.delete({
+      where: { id },
+    });
+};
+  
+// incrementation du compteur de vues de facon atomique
+const incrementViews = async (id: number) => {
+    return prisma.article.update({
+      where: { id },
+      data: {
+        views: { increment: 1 },
+      },
+      select: { views: true },
+    });
+};
+
+export default {
+    createArticle,
+    findArticleById,
+    findArticleBySlug,
+    findAllArticles,
+    updateArticle,
+    deleteArticle,
+    incrementViews,
+};
