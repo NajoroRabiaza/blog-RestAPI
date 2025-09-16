@@ -1,6 +1,6 @@
 import prisma from "../config/database";
+import { Prisma } from "@prisma/client";
 
-// options de filtrage pour la liste des articles
 interface FindAllOptions {
   published?: boolean;
   authorId?: number;
@@ -82,7 +82,6 @@ const findArticleBySlug = async (slug: string) => {
   });
 };
 
-// liste paginee des articles avec filtres optionnels et tri
 const findAllArticles = async (options: FindAllOptions = {}) => {
   const {
     published,
@@ -94,7 +93,8 @@ const findAllArticles = async (options: FindAllOptions = {}) => {
     sortOrder = "desc",
   } = options;
 
-  const where: any = {};
+  // type Prisma correct pour la clause where
+  const where: Prisma.ArticleWhereInput = {};
 
   if (published !== undefined) {
     where.published = published;
@@ -103,7 +103,6 @@ const findAllArticles = async (options: FindAllOptions = {}) => {
     where.authorId = authorId;
   }
 
-  // recherche insensible a la casse dans le titre et le contenu
   if (search) {
     where.OR = [
       { title: { contains: search, mode: "insensitive" } },
@@ -111,14 +110,15 @@ const findAllArticles = async (options: FindAllOptions = {}) => {
     ];
   }
 
-  const skip = (Math.max(1, page) - 1) * Math.min(100, Math.max(1, limit));
-  const take = Math.min(100, Math.max(1, limit));
+  const safePage = Math.max(1, page);
+  const safeLimit = Math.min(100, Math.max(1, limit));
+  const skip = (safePage - 1) * safeLimit;
 
   const [articles, total] = await prisma.$transaction([
     prisma.article.findMany({
       where,
       skip,
-      take,
+      take: safeLimit,
       orderBy: { [sortBy]: sortOrder },
       include: {
         author: {
@@ -144,11 +144,11 @@ const findAllArticles = async (options: FindAllOptions = {}) => {
   return {
     articles,
     total,
-    page: Math.max(1, page),
-    limit: take,
-    totalPages: Math.ceil(total / take),
-    hasNextPage: Math.max(1, page) < Math.ceil(total / take),
-    hasPreviousPage: Math.max(1, page) > 1,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.ceil(total / safeLimit),
+    hasNextPage: safePage < Math.ceil(total / safeLimit),
+    hasPreviousPage: safePage > 1,
   };
 };
 
