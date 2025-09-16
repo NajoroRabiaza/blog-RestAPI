@@ -26,20 +26,16 @@ const createArticle = async (data: {
 }) => {
   const slug = await resolveUniqueSlug(data.title);
 
+  // on fusionne published et publishedAt dans un seul appel Prisma
   const article = await articleRepository.createArticle({
     title: data.title,
     slug,
     content: data.content,
     authorId: data.authorId,
+    published: data.published ?? false,
+    publishedAt: data.published ? new Date() : null,
   });
 
-  // si l'article est publié on enregistre la date de publication
-  if (data.published) {
-    await articleRepository.updateArticle(article.id, {
-      published: true,
-      publishedAt: new Date(),
-    });
-  }
   return article;
 };
 
@@ -59,22 +55,50 @@ const updateArticle = async (
   if (!existing) {
     throw new AppError("Article introuvable", 404);
   }
-  // seul l'auteur ou un admin peut modifier l'article
   if (existing.authorId !== authorId && role !== "ADMIN") {
     throw new AppError("Vous n avez pas les droits pour modifier cet article", 403);
   }
 
-  const updateData: any = { ...data };
+  const updateData: Partial<{
+    title: string;
+    slug: string;
+    content: string;
+    published: boolean;
+    publishedAt: Date | null;
+  }> = { ...data };
 
-  // regeneration du slug uniquement si le titre a change
   if (data.title && data.title !== existing.title) {
     updateData.slug = await resolveUniqueSlug(data.title);
   }
-  // mise a jour de publishedAt si on publie pour la premiere fois
   if (data.published && !existing.published) {
     updateData.publishedAt = new Date();
   }
+
+  // si on depublie un article on remet publishedAt a null
+  if (data.published === false && existing.published) {
+    updateData.publishedAt = null;
+  }
+
   return articleRepository.updateArticle(id, updateData);
 };
 
-export default { createArticle, updateArticle, resolveUniqueSlug };
+// suppression d'un article avec verification de propriete
+const deleteArticle = async (
+  id: number,
+  authorId: number,
+  role: string
+): Promise<void> => {
+  const existing = await articleRepository.findArticleById(id);
+
+  if (!existing) {
+    throw new AppError("Article introuvable", 404);
+  }
+
+  if (existing.authorId !== authorId && role !== "ADMIN") {
+    throw new AppError("Vous n avez pas les droits pour supprimer cet article", 403);
+  }
+
+  await articleRepository.deleteArticle(id);
+};
+
+export default { createArticle, updateArticle, deleteArticle, resolveUniqueSlug };

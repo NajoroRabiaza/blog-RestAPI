@@ -12,28 +12,30 @@ interface FindAllOptions {
 }
 
 const createArticle = async (data: {
-  title: string;
-  slug: string;
-  content: string;
-  authorId: number;
-}) => {
-  return prisma.article.create({
-    data,
-    include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          email: true,
+    title: string;
+    slug: string;
+    content: string;
+    authorId: number;
+    published?: boolean;
+    publishedAt?: Date | null;
+  }) => {
+    return prisma.article.create({
+      data,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
         },
       },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-    },
-  });
+    });
 };
 
 const findArticleById = async (id: number) => {
