@@ -101,4 +101,34 @@ const deleteArticle = async (
   await articleRepository.deleteArticle(id);
 };
 
-export default { createArticle, updateArticle, deleteArticle, resolveUniqueSlug };
+// listing des articles avec filtres pagination et tri
+const getArticles = async (options: {
+    published?: boolean;
+    authorId?: number;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "createdAt" | "updatedAt" | "title" | "views";
+    sortOrder?: "asc" | "desc";
+    requesterId?: number;
+    requesterRole?: string;
+  }) => {
+    const {
+      requesterId,
+      requesterRole,
+      ...repositoryOptions
+    } = options;
+  
+    // un utilisateur non admin ne voit que les articles publies
+    // sauf ses propres articles non publies
+    if (requesterRole !== "ADMIN") {
+      if (requesterId && options.authorId === requesterId) {
+        // l auteur voit tous ses propres articles
+      } else {
+        repositoryOptions.published = true;
+      }
+    }
+    return articleRepository.findAllArticles(repositoryOptions);
+};
+
+export default { createArticle, updateArticle, deleteArticle, getArticles, resolveUniqueSlug };

@@ -2,7 +2,6 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-/** Variables d environnement validees et typees exportees pour toute l application */
 const requiredVars = [
   "DATABASE_URL",
   "REDIS_URL",
@@ -17,6 +16,16 @@ for (const variable of requiredVars) {
   }
 }
 
+// validation du format de JWT_EXPIRES_IN
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN as string;
+const validExpiresInPattern = /^\d+[smhd]$/;
+if (!validExpiresInPattern.test(jwtExpiresIn)) {
+  console.error(
+    "JWT_EXPIRES_IN doit etre au format : 60s, 15m, 24h, 7d"
+  );
+  process.exit(1);
+}
+
 export const env = {
   port: parseInt(process.env.PORT ?? "3000", 10),
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -24,6 +33,6 @@ export const env = {
   redisUrl: process.env.REDIS_URL as string,
   jwt: {
     secret: process.env.JWT_SECRET as string,
-    expiresIn: process.env.JWT_EXPIRES_IN as string,
+    expiresIn: jwtExpiresIn,
   },
 };
