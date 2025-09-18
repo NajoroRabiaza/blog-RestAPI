@@ -165,31 +165,46 @@ const updateArticle = async (
       publishedAt: Date | null;
     }>
   ) => {
-    return prisma.article.update({
-      where: { id },
-      data,
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
+    try {
+      return await prisma.article.update({
+        where: { id },
+        data,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+          tags: {
+            include: {
+              tag: true,
+            },
           },
         },
-        tags: {
-          include: {
-            tag: true,
-          },
-        },
-      },
-    });
+      });
+    } catch (err: any) {
+      if (err.code === "P2025") {
+        return null;
+      }
+      throw err;
+    }
 };
   
 // suppression d'un article et de ses donnees associees en cascade
 const deleteArticle = async (id: number) => {
-    return prisma.article.delete({
-      where: { id },
-    });
+    try {
+      return await prisma.article.delete({
+        where: { id },
+      });
+    } catch (err: any) {
+      // P2025 = record not found dans Prisma
+      if (err.code === "P2025") {
+        return null;
+      }
+      throw err;
+    }
 };
   
 // incrementation du compteur de vues de facon atomique
