@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import errorHandler from "./middlewares/errorHandler";
 import authRoutes from "./routes/auth.routes";
+import articleRoutes from "./routes/article.routes";
 
 const app: Application = express();
 
@@ -26,8 +27,8 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-// routes d'authentification
 app.use("/auth", authRoutes);
+app.use("/articles", articleRoutes);
 
 app.use(errorHandler);
 
