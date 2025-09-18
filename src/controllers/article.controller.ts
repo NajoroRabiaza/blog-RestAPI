@@ -1,4 +1,5 @@
 import articleService from "../services/article.service";
+import AppError from "../utils/AppError";
 import { AsyncController } from "../types";
 
 const getArticles: AsyncController = async (req, res, next) => {
@@ -39,7 +40,6 @@ const getArticles: AsyncController = async (req, res, next) => {
 
 const getArticleBySlug: AsyncController = async (req, res, next) => {
   try {
-    // cast explicite car req.params retourne ParamsDictionary avec string | string[]
     const slug = req.params.slug as string;
     const article = await articleService.getArticleBySlug(slug, req.user?.id);
 
@@ -75,8 +75,13 @@ const createArticle: AsyncController = async (req, res, next) => {
 
 const updateArticle: AsyncController = async (req, res, next) => {
   try {
-    // cast explicite sur req.params.id
     const id = parseInt(req.params.id as string, 10);
+
+    // protection contre un id non numerique dans l url
+    if (isNaN(id)) {
+      return next(new AppError("Identifiant d article invalide", 400));
+    }
+
     const { title, content, published } = req.body;
 
     const article = await articleService.updateArticle(
@@ -98,6 +103,10 @@ const updateArticle: AsyncController = async (req, res, next) => {
 const deleteArticle: AsyncController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
+
+    if (isNaN(id)) {
+      return next(new AppError("Identifiant d article invalide", 400));
+    }
 
     await articleService.deleteArticle(id, req.user!.id, req.user!.role);
 
