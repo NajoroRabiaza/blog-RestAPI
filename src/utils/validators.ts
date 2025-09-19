@@ -1,10 +1,10 @@
 import Joi from "joi";
 
-// schema de validation pour l'inscription d'un nouvel user
+// schemas d authentification
 const registerSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    "string.email": "L email fourni n est pas valide",
-    "any.required": "L email est obligatoire",
+    "string.email": "L'email fourni n est pas valide",
+    "any.required": "L'email est obligatoire",
   }),
   password: Joi.string()
     .min(8)
@@ -22,26 +22,25 @@ const registerSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .required()
     .messages({
-      "string.min": "Le nom d utilisateur doit contenir au moins 3 caracteres",
-      "string.max": "Le nom d utilisateur ne peut pas depasser 30 caracteres",
+      "string.min": "Le nom de l'user doit contenir au moins 3 caracteres",
+      "string.max": "Le nom de l'user ne peut pas depasser 30 caracteres",
       "string.pattern.base":
-        "Le nom d utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores",
-      "any.required": "Le nom d utilisateur est obligatoire",
+        "Le nom de l'user ne peut contenir que des lettres, chiffres, tirets et underscores",
+      "any.required": "Le nom d'utilisateur est obligatoire",
     }),
 });
 
-// schema de validation pour la connexion
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    "string.email": "L email fourni n est pas valide",
-    "any.required": "L email est obligatoire",
+    "string.email": "L'email fourni n est pas valide",
+    "any.required": "L'email est obligatoire",
   }),
   password: Joi.string().required().messages({
     "any.required": "Le mot de passe est obligatoire",
   }),
 });
 
-// schema de validation pour la creation d'un article
+// schemas article
 const createArticleSchema = Joi.object({
   title: Joi.string().min(3).max(200).required().messages({
     "string.min": "Le titre doit contenir au moins 3 caracteres",
@@ -56,7 +55,6 @@ const createArticleSchema = Joi.object({
   tags: Joi.array().items(Joi.string().min(1).max(50)).max(10).default([]),
 });
 
-// schema de validation pour la mise a jour partielle d'un article
 const updateArticleSchema = Joi.object({
   title: Joi.string().min(3).max(200).messages({
     "string.min": "Le titre doit contenir au moins 3 caracteres",
@@ -69,9 +67,22 @@ const updateArticleSchema = Joi.object({
   tags: Joi.array().items(Joi.string().min(1).max(50)).max(10),
 }).min(1);
 
+const getArticlesSchema = Joi.object({
+  search: Joi.string().max(100).optional(),
+  authorId: Joi.number().integer().positive().optional(),
+  published: Joi.boolean().optional(),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  sortBy: Joi.string()
+    .valid("createdAt", "updatedAt", "title", "views")
+    .default("createdAt"),
+  sortOrder: Joi.string().valid("asc", "desc").default("desc"),
+});
+
 export default {
   registerSchema,
   loginSchema,
   createArticleSchema,
   updateArticleSchema,
+  getArticlesSchema,
 };
