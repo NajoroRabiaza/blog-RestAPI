@@ -8,7 +8,11 @@ import validators from "../utils/validators";
 const router: IRouter = Router();
 
 // GET /articles — liste publique avec filtres et pagination
-router.get("/", articleController.getArticles);
+router.get(
+  "/",
+  validate(validators.getArticlesSchema, "query"),
+  articleController.getArticles
+);
 
 // GET /articles/:slug — detail d'un article par son slug
 router.get("/:slug", articleController.getArticleBySlug);
