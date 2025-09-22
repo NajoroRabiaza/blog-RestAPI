@@ -1,4 +1,5 @@
 import articleRepository from "../repositories/article.repository";
+import tagRepository from "../repositories/tag.repository";
 import slugUtils from "../utils/slug";
 import AppError from "../utils/AppError";
 
@@ -21,10 +22,11 @@ const createArticle = async (data: {
   content: string;
   published?: boolean;
   authorId: number;
+  tags?: string[];
 }) => {
   const slug = await resolveUniqueSlug(data.title);
 
-  return articleRepository.createArticle({
+  const article = await articleRepository.createArticle({
     title: data.title,
     slug,
     content: data.content,
@@ -32,6 +34,19 @@ const createArticle = async (data: {
     published: data.published ?? false,
     publishedAt: data.published ? new Date() : null,
   });
+
+  // creation et association des tags si fournis
+  if (data.tags && data.tags.length > 0) {
+    const tagRecords = await Promise.all(
+      data.tags.map((name) => tagRepository.findOrCreateTag(name))
+    );
+    await tagRepository.associateTagsToArticle(
+      article.id,
+      tagRecords.map((t) => t.id)
+    );
+  }
+
+  return articleRepository.findArticleById(article.id);
 };
 
 const updateArticle = async (
@@ -42,6 +57,7 @@ const updateArticle = async (
     title: string;
     content: string;
     published: boolean;
+    tags: string[];
   }>
 ) => {
   const existing = await articleRepository.findArticleById(id);
@@ -59,7 +75,11 @@ const updateArticle = async (
     content: string;
     published: boolean;
     publishedAt: Date | null;
-  }> = { ...data };
+  }> = {};
+
+  if (data.title) updateData.title = data.title;
+  if (data.content) updateData.content = data.content;
+  if (data.published !== undefined) updateData.published = data.published;
 
   if (data.title && data.title !== existing.title) {
     updateData.slug = await resolveUniqueSlug(data.title);
@@ -70,6 +90,17 @@ const updateArticle = async (
 
   if (data.published === false && existing.published) {
     updateData.publishedAt = null;
+  }
+
+  // mise a jour des tags si fournis
+  if (data.tags !== undefined) {
+    const tagRecords = await Promise.all(
+      data.tags.map((name) => tagRepository.findOrCreateTag(name))
+    );
+    await tagRepository.associateTagsToArticle(
+      id,
+      tagRecords.map((t) => t.id)
+    );
   }
 
   return articleRepository.updateArticle(id, updateData);
@@ -105,12 +136,9 @@ const getArticles = async (options: {
 }) => {
   const { requesterId, requesterRole, ...repositoryOptions } = options;
 
-  // un admin peut filtrer sur published explicitement
-  // un non admin ne voit que les articles publies sauf les siens
   if (requesterRole !== "ADMIN") {
     const isOwnArticles =
-      requesterId !== undefined &&
-      options.authorId === requesterId;
+      requesterId !== undefined && options.authorId === requesterId;
 
     if (!isOwnArticles) {
       repositoryOptions.published = true;
@@ -119,7 +147,6 @@ const getArticles = async (options: {
   return articleRepository.findAllArticles(repositoryOptions);
 };
 
-// recuperation d'un article par slug avec incrementation des vues
 const getArticleBySlug = async (
   slug: string,
   requesterId?: number
@@ -129,7 +156,6 @@ const getArticleBySlug = async (
   if (!article) {
     throw new AppError("Article introuvable", 404);
   }
-  // on n incremente les vues que si ce n est pas l auteur qui consulte
   if (!requesterId || requesterId !== article.authorId) {
     await articleRepository.incrementViews(article.id);
   }
