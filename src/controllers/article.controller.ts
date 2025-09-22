@@ -53,51 +53,51 @@ const getArticleBySlug: AsyncController = async (req, res, next) => {
 };
 
 const createArticle: AsyncController = async (req, res, next) => {
-  try {
-    const { title, content, published } = req.body;
-    const authorId = req.user!.id;
-
-    const article = await articleService.createArticle({
-      title,
-      content,
-      published,
-      authorId,
-    });
-
-    res.status(201).json({
-      status: "success",
-      data: { article },
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-const updateArticle: AsyncController = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id as string, 10);
-
-    // protection contre un id non numerique dans l url
-    if (isNaN(id)) {
-      return next(new AppError("Identifiant d article invalide", 400));
+    try {
+      const { title, content, published, tags } = req.body;
+      const authorId = req.user!.id;
+  
+      const article = await articleService.createArticle({
+        title,
+        content,
+        published,
+        authorId,
+        tags,
+      });
+  
+      res.status(201).json({
+        status: "success",
+        data: { article },
+      });
+    } catch (err) {
+      next(err);
     }
-
-    const { title, content, published } = req.body;
-
-    const article = await articleService.updateArticle(
-      id,
-      req.user!.id,
-      req.user!.role,
-      { title, content, published }
-    );
-
-    res.status(200).json({
-      status: "success",
-      data: { article },
-    });
-  } catch (err) {
-    next(err);
-  }
+};
+  
+const updateArticle: AsyncController = async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+  
+      if (isNaN(id)) {
+        return next(new AppError("Identifiant d article invalide", 400));
+      }
+  
+      const { title, content, published, tags } = req.body;
+  
+      const article = await articleService.updateArticle(
+        id,
+        req.user!.id,
+        req.user!.role,
+        { title, content, published, tags }
+      );
+  
+      res.status(200).json({
+        status: "success",
+        data: { article },
+      });
+    } catch (err) {
+      next(err);
+    }
 };
 
 const deleteArticle: AsyncController = async (req, res, next) => {

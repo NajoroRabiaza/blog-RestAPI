@@ -2,7 +2,6 @@ import tagRepository from "../repositories/tag.repository";
 import articleRepository from "../repositories/article.repository";
 import AppError from "../utils/AppError";
 
-// creation ou recuperation d'un tag par son nom
 const findOrCreateTag = async (name: string) => {
   if (!name || name.trim().length === 0) {
     throw new AppError("Le nom du tag ne peut pas etre vide", 400);
@@ -14,7 +13,6 @@ const findOrCreateTag = async (name: string) => {
   return tagRepository.findOrCreateTag(name);
 };
 
-// association de tags à un article avec verification de propriete
 const attachTagsToArticle = async (
   articleId: number,
   tagNames: string[],
@@ -28,13 +26,23 @@ const attachTagsToArticle = async (
   }
   if (article.authorId !== requesterId && requesterRole !== "ADMIN") {
     throw new AppError(
-      "Vous n'avez pas les droits pour modifier les tags de cet article",
+      "Vous n avez pas les droits pour modifier les tags de cet article",
       403
     );
   }
 
+  // on autorise un tableau vide pour supprimer tous les tags
+  // mais on le signale dans les logs en developpement
+  if (tagNames.length === 0) {
+    await tagRepository.associateTagsToArticle(articleId, []);
+    return [];
+  }
+
+  // deduplication des noms de tags avant traitement
+  const uniqueNames = [...new Set(tagNames.map((n) => n.toLowerCase().trim()))];
+
   const tagRecords = await Promise.all(
-    tagNames.map((name) => tagRepository.findOrCreateTag(name))
+    uniqueNames.map((name) => tagRepository.findOrCreateTag(name))
   );
 
   await tagRepository.associateTagsToArticle(
@@ -44,12 +52,10 @@ const attachTagsToArticle = async (
   return tagRepository.getTagsByArticle(articleId);
 };
 
-// recuperation de tous les tags avec leur nombre d articles
 const getAllTags = async () => {
   return tagRepository.getAllTags();
 };
 
-// recherche de tags par nom pour l'autocompletion
 const searchTags = async (query: string) => {
   if (!query || query.trim().length === 0) {
     return tagRepository.getAllTags();
@@ -57,4 +63,9 @@ const searchTags = async (query: string) => {
   return tagRepository.searchTags(query);
 };
 
-export default { findOrCreateTag, attachTagsToArticle, getAllTags, searchTags };
+export default {
+  findOrCreateTag,
+  attachTagsToArticle,
+  getAllTags,
+  searchTags,
+};
