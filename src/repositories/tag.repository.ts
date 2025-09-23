@@ -1,8 +1,8 @@
 import prisma from "../config/database";
+import slugUtils from "../utils/slug";
 
 const findOrCreateTag = async (name: string) => {
-  const normalizedName = name.toLowerCase().trim();
-
+  const normalizedName = slugUtils.normalizeTagName(name);
   return prisma.tag.upsert({
     where: { name: normalizedName },
     update: {},
@@ -44,9 +44,9 @@ const getAllTags = async () => {
   });
 };
 
-// normalisation de la query avant la recherche
 const searchTags = async (query: string) => {
-  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedQuery = slugUtils.normalizeTagName(query);
+
   return prisma.tag.findMany({
     where: {
       name: {
@@ -59,4 +59,10 @@ const searchTags = async (query: string) => {
   });
 };
 
-export default { findOrCreateTag, associateTagsToArticle, getTagsByArticle, getAllTags, searchTags };
+export default {
+  findOrCreateTag,
+  associateTagsToArticle,
+  getTagsByArticle,
+  getAllTags,
+  searchTags,
+};

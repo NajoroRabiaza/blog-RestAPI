@@ -1,5 +1,6 @@
 import tagRepository from "../repositories/tag.repository";
 import articleRepository from "../repositories/article.repository";
+import slugUtils from "../utils/slug";
 import AppError from "../utils/AppError";
 
 const findOrCreateTag = async (name: string) => {
@@ -31,15 +32,15 @@ const attachTagsToArticle = async (
     );
   }
 
-  // on autorise un tableau vide pour supprimer tous les tags
-  // mais on le signale dans les logs en developpement
   if (tagNames.length === 0) {
     await tagRepository.associateTagsToArticle(articleId, []);
     return [];
   }
 
-  // deduplication des noms de tags avant traitement
-  const uniqueNames = [...new Set(tagNames.map((n) => n.toLowerCase().trim()))];
+  // deduplication avec la normalisation centralisee
+  const uniqueNames = [
+    ...new Set(tagNames.map((n) => slugUtils.normalizeTagName(n))),
+  ];
 
   const tagRecords = await Promise.all(
     uniqueNames.map((name) => tagRepository.findOrCreateTag(name))

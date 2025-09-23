@@ -15,4 +15,13 @@ const generateUniqueSlug = (title: string, suffix?: number): string => {
     return suffix ? `${baseSlug}-${suffix}` : baseSlug;
 };
   
-export default { generateSlug, generateUniqueSlug };
+// normalisation d'un nom de tag : minuscules, sans espaces superflus
+const normalizeTagName = (name: string): string => {
+    return name.toLowerCase().trim().replace(/\s+/g, "-");
+};
+  
+export default {
+    generateSlug,
+    generateUniqueSlug,
+    normalizeTagName,
+};
