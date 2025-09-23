@@ -5,6 +5,7 @@ import morgan from "morgan";
 import errorHandler from "./middlewares/errorHandler";
 import authRoutes from "./routes/auth.routes";
 import articleRoutes from "./routes/article.routes";
+import tagRoutes from "./routes/tag.routes";
 
 const app: Application = express();
 
@@ -29,6 +30,7 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/auth", authRoutes);
 app.use("/articles", articleRoutes);
+app.use("/tags", tagRoutes);
 
 app.use(errorHandler);
 
