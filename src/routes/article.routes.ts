@@ -1,5 +1,6 @@
 import { Router, IRouter } from "express";
 import articleController from "../controllers/article.controller";
+import tagController from "../controllers/tag.controller";
 import authenticate from "../middlewares/authenticate";
 import authorize from "../middlewares/authorize";
 import validate from "../middlewares/validate";
@@ -7,17 +8,14 @@ import validators from "../utils/validators";
 
 const router: IRouter = Router();
 
-// GET /articles — liste publique avec filtres et pagination
 router.get(
   "/",
   validate(validators.getArticlesSchema, "query"),
   articleController.getArticles
 );
 
-// GET /articles/:slug — detail d'un article par son slug
 router.get("/:slug", articleController.getArticleBySlug);
 
-// POST /articles — creation d'un article, authentification requise
 router.post(
   "/",
   authenticate,
@@ -26,7 +24,6 @@ router.post(
   articleController.createArticle
 );
 
-// PATCH /articles/:id — mise a jour partielle, auteur ou admin uniquement
 router.patch(
   "/:id",
   authenticate,
@@ -35,12 +32,19 @@ router.patch(
   articleController.updateArticle
 );
 
-// DELETE /articles/:id — suppression, auteur ou admin uniquement
 router.delete(
   "/:id",
   authenticate,
   authorize("AUTHOR", "ADMIN"),
   articleController.deleteArticle
+);
+
+// POST /articles/:id/tags — mise a jour des tags d'un article
+router.post(
+  "/:id/tags",
+  authenticate,
+  authorize("AUTHOR", "ADMIN"),
+  tagController.attachTagsToArticle
 );
 
 export default router;
