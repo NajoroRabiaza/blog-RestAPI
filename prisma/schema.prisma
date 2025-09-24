@@ -54,6 +54,9 @@ model Comment {
 
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([authorId])
 }
 
 model Tag {
