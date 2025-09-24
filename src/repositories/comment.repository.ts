@@ -1,7 +1,5 @@
 import prisma from "../config/database";
-import { Prisma } from "@prisma/client";
 
-// creation d'un commentaire sur un article
 const createComment = async (data: {
   content: string;
   articleId: number;
@@ -20,7 +18,6 @@ const createComment = async (data: {
   });
 };
 
-// recuperation des commentaires d'un article avec pagination
 const findCommentsByArticle = async (
   articleId: number,
   options: { page?: number; limit?: number } = {}
@@ -34,7 +31,6 @@ const findCommentsByArticle = async (
       where: { articleId },
       skip,
       take: limit,
-      // tri chronologique croissant pour lire les commentaires dans l ordre
       orderBy: { createdAt: "asc" },
       include: {
         author: {
@@ -59,7 +55,6 @@ const findCommentsByArticle = async (
   };
 };
 
-// recherche d'un commentaire par id
 const findCommentById = async (id: number) => {
   return prisma.comment.findUnique({
     where: { id },
@@ -74,7 +69,29 @@ const findCommentById = async (id: number) => {
   });
 };
 
-// suppression d'un commentaire par id
+// mise a jour du contenu d'un commentaire
+const updateComment = async (id: number, content: string) => {
+  try {
+    return await prisma.comment.update({
+      where: { id },
+      data: { content },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+    });
+  } catch (err: any) {
+    if (err.code === "P2025") {
+      return null;
+    }
+    throw err;
+  }
+};
+
 const deleteComment = async (id: number) => {
   try {
     return await prisma.comment.delete({
@@ -92,5 +109,6 @@ export default {
   createComment,
   findCommentsByArticle,
   findCommentById,
+  updateComment,
   deleteComment,
 };
