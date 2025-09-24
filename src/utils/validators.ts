@@ -79,10 +79,29 @@ const getArticlesSchema = Joi.object({
   sortOrder: Joi.string().valid("asc", "desc").default("desc"),
 });
 
+// schemas commentaire
+const createCommentSchema = Joi.object({
+  content: Joi.string().min(1).max(2000).required().messages({
+    "string.min": "Le commentaire ne peut pas etre vide",
+    "string.max": "Le commentaire ne peut pas depasser 2000 caracteres",
+    "any.required": "Le contenu du commentaire est obligatoire",
+  }),
+});
+
+const updateCommentSchema = Joi.object({
+  content: Joi.string().min(1).max(2000).required().messages({
+    "string.min": "Le commentaire ne peut pas etre vide",
+    "string.max": "Le commentaire ne peut pas depasser 2000 caracteres",
+    "any.required": "Le contenu du commentaire est obligatoire",
+  }),
+});
+
 export default {
   registerSchema,
   loginSchema,
   createArticleSchema,
   updateArticleSchema,
   getArticlesSchema,
+  createCommentSchema,
+  updateCommentSchema,
 };

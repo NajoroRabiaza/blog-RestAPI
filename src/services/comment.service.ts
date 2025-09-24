@@ -2,7 +2,6 @@ import commentRepository from "../repositories/comment.repository";
 import articleRepository from "../repositories/article.repository";
 import AppError from "../utils/AppError";
 
-// ajout d'un commentaire sur un article publie
 const addComment = async (data: {
   content: string;
   articleId: number;
@@ -13,7 +12,6 @@ const addComment = async (data: {
     throw new AppError("Article introuvable", 404);
   }
 
-  // on refuse les commentaires sur les articles non publies
   if (!article.published) {
     throw new AppError(
       "Impossible de commenter un article non publie",
@@ -23,7 +21,6 @@ const addComment = async (data: {
   return commentRepository.createComment(data);
 };
 
-// recuperation des commentaires d'un article avec pagination
 const getCommentsByArticle = async (
   articleId: number,
   options: { page?: number; limit?: number } = {}
@@ -36,7 +33,6 @@ const getCommentsByArticle = async (
   return commentRepository.findCommentsByArticle(articleId, options);
 };
 
-// modification d'un commentaire existant
 const editComment = async (
   commentId: number,
   content: string,
@@ -48,7 +44,6 @@ const editComment = async (
     throw new AppError("Commentaire introuvable", 404);
   }
 
-  // seul l'auteur peut modifier son commentaire
   if (comment.authorId !== requesterId) {
     throw new AppError(
       "Vous n avez pas les droits pour modifier ce commentaire",
@@ -58,7 +53,6 @@ const editComment = async (
   return commentRepository.updateComment(commentId, content);
 };
 
-// suppression d'un commentaire avec verification de propriete
 const removeComment = async (
   commentId: number,
   requesterId: number,
@@ -70,12 +64,17 @@ const removeComment = async (
     throw new AppError("Commentaire introuvable", 404);
   }
 
-  // l'auteur du commentaire ou un admin peut le supprimer
   if (comment.authorId !== requesterId && requesterRole !== "ADMIN") {
     throw new AppError(
       "Vous n avez pas les droits pour supprimer ce commentaire",
       403
     );
+  }
+
+  // verification que l'article parent existe encore avant suppression
+  const article = await articleRepository.findArticleById(comment.articleId);
+  if (!article) {
+    throw new AppError("L article associe a ce commentaire n existe plus", 404);
   }
   await commentRepository.deleteComment(commentId);
 };
