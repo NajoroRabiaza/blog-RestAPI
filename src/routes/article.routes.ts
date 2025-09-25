@@ -1,6 +1,7 @@
 import { Router, IRouter } from "express";
 import articleController from "../controllers/article.controller";
 import tagController from "../controllers/tag.controller";
+import commentRoutes from "./comment.routes";
 import authenticate from "../middlewares/authenticate";
 import authorize from "../middlewares/authorize";
 import validate from "../middlewares/validate";
@@ -39,12 +40,14 @@ router.delete(
   articleController.deleteArticle
 );
 
-// POST /articles/:id/tags — mise a jour des tags d'un article
 router.post(
   "/:id/tags",
   authenticate,
   authorize("AUTHOR", "ADMIN"),
   tagController.attachTagsToArticle
 );
+
+// routes des commentaires imbriquees sous les articles
+router.use("/:articleId/comments", commentRoutes);
 
 export default router;
