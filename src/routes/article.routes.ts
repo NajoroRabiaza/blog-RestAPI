@@ -2,6 +2,7 @@ import { Router, IRouter } from "express";
 import articleController from "../controllers/article.controller";
 import tagController from "../controllers/tag.controller";
 import commentRoutes from "./comment.routes";
+import commentController from "../controllers/comment.controller";
 import authenticate from "../middlewares/authenticate";
 import authorize from "../middlewares/authorize";
 import validate from "../middlewares/validate";
@@ -47,7 +48,7 @@ router.post(
   tagController.attachTagsToArticle
 );
 
-// routes des commentaires imbriquees sous les articles
+// routes commentaires par articleId numerique
 router.use("/:articleId/comments", commentRoutes);
 
 export default router;

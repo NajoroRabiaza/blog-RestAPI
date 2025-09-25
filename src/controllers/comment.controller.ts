@@ -1,8 +1,8 @@
 import commentService from "../services/comment.service";
+import articleRepository from "../repositories/article.repository";
 import AppError from "../utils/AppError";
 import { AsyncController } from "../types";
 
-// ajout d'un commentaire sur un article
 const addComment: AsyncController = async (req, res, next) => {
   try {
     const articleId = parseInt(req.params.articleId as string, 10);
@@ -26,7 +26,6 @@ const addComment: AsyncController = async (req, res, next) => {
   }
 };
 
-// liste des commentaires d'un article avec pagination
 const getCommentsByArticle: AsyncController = async (req, res, next) => {
   try {
     const articleId = parseInt(req.params.articleId as string, 10);
@@ -49,7 +48,31 @@ const getCommentsByArticle: AsyncController = async (req, res, next) => {
   }
 };
 
-// modification d'un commentaire
+// recuperation des commentaires via le slug de l article
+const getCommentsBySlug: AsyncController = async (req, res, next) => {
+  try {
+    const slug = req.params.slug as string;
+    const { page, limit } = req.query;
+
+    const article = await articleRepository.findArticleBySlug(slug)
+    if (!article) {
+      return next(new AppError("Article introuvable", 404));
+    }
+
+    const result = await commentService.getCommentsByArticle(article.id, {
+      page: page ? parseInt(page as string, 10) : undefined,
+      limit: limit ? parseInt(limit as string, 10) : undefined,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const editComment: AsyncController = async (req, res, next) => {
   try {
     const commentId = parseInt(req.params.id as string, 10);
@@ -73,7 +96,6 @@ const editComment: AsyncController = async (req, res, next) => {
   }
 };
 
-// suppression d'un commentaire
 const removeComment: AsyncController = async (req, res, next) => {
   try {
     const commentId = parseInt(req.params.id as string, 10);
@@ -96,6 +118,7 @@ const removeComment: AsyncController = async (req, res, next) => {
 export default {
   addComment,
   getCommentsByArticle,
+  getCommentsBySlug,
   editComment,
   removeComment,
 };
