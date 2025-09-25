@@ -6,26 +6,22 @@ import validators from "../utils/validators";
 
 const router: IRouter = Router({ mergeParams: true });
 
-// GET /articles/:articleId/comments — liste des commentaires
 router.get("/", commentController.getCommentsByArticle);
 
-// POST /articles/:articleId/comments — ajout d'un commentaire
 router.post(
   "/",
   authenticate,
-  validate(validators.createCommentSchema),
+  validate(validators.commentSchema),
   commentController.addComment
 );
 
-// PATCH /articles/:articleId/comments/:id — modification d'un commentaire
 router.patch(
   "/:id",
   authenticate,
-  validate(validators.updateCommentSchema),
+  validate(validators.commentSchema),
   commentController.editComment
 );
 
-// DELETE /articles/:articleId/comments/:id — suppression d'un commentaire
 router.delete(
   "/:id",
   authenticate,

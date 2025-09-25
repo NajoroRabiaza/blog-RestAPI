@@ -96,6 +96,15 @@ const updateCommentSchema = Joi.object({
   }),
 });
 
+// schema commentaire unique pour creation et modification
+const commentSchema = Joi.object({
+  content: Joi.string().min(1).max(2000).required().messages({
+    "string.min": "Le commentaire ne peut pas etre vide",
+    "string.max": "Le commentaire ne peut pas depasser 2000 caracteres",
+    "any.required": "Le contenu du commentaire est obligatoire",
+  }),
+});
+
 export default {
   registerSchema,
   loginSchema,
@@ -104,4 +113,5 @@ export default {
   getArticlesSchema,
   createCommentSchema,
   updateCommentSchema,
+  commentSchema,
 };
