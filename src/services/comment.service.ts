@@ -2,6 +2,10 @@ import commentRepository from "../repositories/comment.repository";
 import articleRepository from "../repositories/article.repository";
 import AppError from "../utils/AppError";
 
+/**
+ * Ajoute un commentaire sur un article publie.
+ * Refuse si l article n existe pas ou n est pas publie.
+ */
 const addComment = async (data: {
   content: string;
   articleId: number;
@@ -21,6 +25,10 @@ const addComment = async (data: {
   return commentRepository.createComment(data);
 };
 
+/**
+ * Retourne les commentaires d un article avec pagination.
+ * Verifie que l article existe avant de chercher ses commentaires.
+ */
 const getCommentsByArticle = async (
   articleId: number,
   options: { page?: number; limit?: number } = {}
@@ -33,6 +41,10 @@ const getCommentsByArticle = async (
   return commentRepository.findCommentsByArticle(articleId, options);
 };
 
+/**
+ * Modifie le contenu d un commentaire.
+ * Seul l auteur du commentaire peut le modifier.
+ */
 const editComment = async (
   commentId: number,
   content: string,
@@ -53,6 +65,10 @@ const editComment = async (
   return commentRepository.updateComment(commentId, content);
 };
 
+/**
+ * Supprime un commentaire.
+ * L auteur ou un ADMIN peut supprimer un commentaire.
+ */
 const removeComment = async (
   commentId: number,
   requesterId: number,
@@ -71,7 +87,6 @@ const removeComment = async (
     );
   }
 
-  // verification que l'article parent existe encore avant suppression
   const article = await articleRepository.findArticleById(comment.articleId);
   if (!article) {
     throw new AppError("L article associe a ce commentaire n existe plus", 404);
