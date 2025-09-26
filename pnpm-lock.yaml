@@ -11,6 +11,7 @@ specifiers:
   '@types/node': ^25.6.0
   bcryptjs: ^3.0.3
   cors: ^2.8.6
+  crypto: ^1.0.1
   dotenv: ^17.4.2
   express: ^5.2.1
   helmet: ^8.1.0
@@ -27,6 +28,7 @@ dependencies:
   '@prisma/client': 4.16.2_prisma@4.16.2
   bcryptjs: 3.0.3
   cors: 2.8.6
+  crypto: 1.0.1
   dotenv: 17.4.2
   express: 5.2.1
   helmet: 8.1.0
@@ -408,6 +410,11 @@ packages:
   /create-require/1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
+
+  /crypto/1.0.1:
+    resolution: {integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==}
+    deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+    dev: false
 
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}

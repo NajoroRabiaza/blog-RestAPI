@@ -3,11 +3,12 @@ import tagRepository from "../repositories/tag.repository";
 import slugUtils from "../utils/slug";
 import AppError from "../utils/AppError";
 import redis from "../config/redis";
+import crypto from "crypto";
 
 // duree du cache en secondes
 const CACHE_TTL = 600;
 
-// generation d une cle de cache unique par utilisateur et filtres
+// generation d'une cle de cache courte via hash MD5 des options
 const buildCacheKey = (options: Record<string, unknown>): string => {
   const sorted = Object.keys(options)
     .sort()
@@ -18,7 +19,12 @@ const buildCacheKey = (options: Record<string, unknown>): string => {
       return acc;
     }, {} as Record<string, unknown>);
 
-  return `articles:${JSON.stringify(sorted)}`;
+  const hash = crypto
+    .createHash("md5")
+    .update(JSON.stringify(sorted))
+    .digest("hex");
+
+  return `articles:${hash}`;
 };
 
 const resolveUniqueSlug = async (title: string): Promise<string> => {
@@ -188,10 +194,14 @@ const getArticles = async (options: {
   try {
     const cached = await redis.get(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      // protection contre une valeur corrompue en cache
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
     }
   } catch {
-    // cache miss ou Redis indisponible, on continue vers la base
+    // cache miss, Redis indisponible ou valeur corrompue
   }
 
   const result = await articleRepository.findAllArticles(repositoryOptions);
