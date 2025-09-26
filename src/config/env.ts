@@ -16,13 +16,10 @@ for (const variable of requiredVars) {
   }
 }
 
-// validation du format de JWT_EXPIRES_IN
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN as string;
 const validExpiresInPattern = /^\d+[smhd]$/;
 if (!validExpiresInPattern.test(jwtExpiresIn)) {
-  console.error(
-    "JWT_EXPIRES_IN doit etre au format : 60s, 15m, 24h, 7d"
-  );
+  console.error("JWT_EXPIRES_IN doit etre au format : 60s, 15m, 24h, 7d");
   process.exit(1);
 }
 
@@ -34,5 +31,9 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET as string,
     expiresIn: jwtExpiresIn,
+  },
+  cache: {
+    // TTL du cache en secondes, defaut 10 minutes
+    articlesTTL: parseInt(process.env.CACHE_ARTICLES_TTL ?? "600", 10),
   },
 };

@@ -4,9 +4,11 @@ import slugUtils from "../utils/slug";
 import AppError from "../utils/AppError";
 import redis from "../config/redis";
 import crypto from "crypto";
+// on importe env pour rendre le TTL configurable
+import { env } from "../config/env";
 
 // duree du cache en secondes
-const CACHE_TTL = 600;
+const CACHE_TTL = env.cache.articlesTTL;
 
 // generation d'une cle de cache courte via hash MD5 des options
 const buildCacheKey = (options: Record<string, unknown>): string => {
