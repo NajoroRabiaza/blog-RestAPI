@@ -2,6 +2,24 @@ import articleRepository from "../repositories/article.repository";
 import tagRepository from "../repositories/tag.repository";
 import slugUtils from "../utils/slug";
 import AppError from "../utils/AppError";
+import redis from "../config/redis";
+
+// duree du cache en secondes
+const CACHE_TTL = 600;
+
+// generation d une cle de cache unique par utilisateur et filtres
+const buildCacheKey = (options: Record<string, unknown>): string => {
+  const sorted = Object.keys(options)
+    .sort()
+    .reduce((acc, key) => {
+      if (options[key] !== undefined) {
+        acc[key] = options[key];
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+
+  return `articles:${JSON.stringify(sorted)}`;
+};
 
 const resolveUniqueSlug = async (title: string): Promise<string> => {
   const baseSlug = slugUtils.generateSlug(title);
@@ -35,7 +53,6 @@ const createArticle = async (data: {
     publishedAt: data.published ? new Date() : null,
   });
 
-  // creation et association des tags si fournis
   if (data.tags && data.tags.length > 0) {
     const tagRecords = await Promise.all(
       data.tags.map((name) => tagRepository.findOrCreateTag(name))
@@ -45,6 +62,9 @@ const createArticle = async (data: {
       tagRecords.map((t) => t.id)
     );
   }
+
+  // invalidation du cache apres creation
+  await invalidateArticleCache();
 
   return articleRepository.findArticleById(article.id);
 };
@@ -92,7 +112,6 @@ const updateArticle = async (
     updateData.publishedAt = null;
   }
 
-  // mise a jour des tags si fournis
   if (data.tags !== undefined) {
     const tagRecords = await Promise.all(
       data.tags.map((name) => tagRepository.findOrCreateTag(name))
@@ -102,6 +121,9 @@ const updateArticle = async (
       tagRecords.map((t) => t.id)
     );
   }
+
+  // invalidation du cache apres modification
+  await invalidateArticleCache();
 
   return articleRepository.updateArticle(id, updateData);
 };
@@ -121,6 +143,21 @@ const deleteArticle = async (
   }
 
   await articleRepository.deleteArticle(id);
+
+  // invalidation du cache apres suppression
+  await invalidateArticleCache();
+};
+
+// invalidation de toutes les cles de cache des articles
+const invalidateArticleCache = async (): Promise<void> => {
+  try {
+    const keys = await redis.keys("articles:*");
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch {
+    // on ne bloque pas si Redis est indisponible
+  }
 };
 
 const getArticles = async (options: {
@@ -144,7 +181,29 @@ const getArticles = async (options: {
       repositoryOptions.published = true;
     }
   }
-  return articleRepository.findAllArticles(repositoryOptions);
+
+  // tentative de lecture depuis le cache
+  const cacheKey = buildCacheKey({ ...repositoryOptions, requesterId, requesterRole });
+
+  try {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch {
+    // cache miss ou Redis indisponible, on continue vers la base
+  }
+
+  const result = await articleRepository.findAllArticles(repositoryOptions);
+
+  // mise en cache du resultat
+  try {
+    await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL);
+  } catch {
+    // on ne bloque pas si Redis est indisponible
+  }
+
+  return result;
 };
 
 const getArticleBySlug = async (
@@ -163,4 +222,11 @@ const getArticleBySlug = async (
   return article;
 };
 
-export default { createArticle, updateArticle, deleteArticle, getArticles, getArticleBySlug, resolveUniqueSlug };
+export default {
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  getArticles,
+  getArticleBySlug,
+  resolveUniqueSlug,
+};
