@@ -8,6 +8,5 @@ module.exports = {
       "!src/**/*.test.ts",
       "!src/server.ts",
     ],
-    setupFilesAfterFramework: [],
     clearMocks: true,
-};
+  };
