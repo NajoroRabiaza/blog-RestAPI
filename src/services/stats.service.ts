@@ -6,29 +6,29 @@ import AppError from "../utils/AppError";
  * Inclut le nombre d articles, de vues totales et de commentaires recus.
  */
 const getAuthorStats = async (authorId: number) => {
-  const [articleStats, commentCount] = await prisma.$transaction([
-    prisma.article.aggregate({
-      where: {
-        authorId,
-        // on exclut les articles supprimes et on ne compte que les publies
-        published: true,
-      },
-      _count: { id: true },
-      _sum: { views: true },
-    }),
-    prisma.comment.count({
-      where: {
-        article: {
+  const [articleStats, commentCount, totalArticles] =
+    await prisma.$transaction([
+      prisma.article.aggregate({
+        where: {
           authorId,
           published: true,
         },
-      },
-    }),
-  ]);
-
-  const totalArticles = await prisma.article.count({
-    where: { authorId },
-  });
+        _count: { id: true },
+        _sum: { views: true },
+      }),
+      // correction : on ne compte que les commentaires sur articles publies
+      prisma.comment.count({
+        where: {
+          article: {
+            authorId,
+            published: true,
+          },
+        },
+      }),
+      prisma.article.count({
+        where: { authorId },
+      }),
+    ]);
 
   const publishedArticles = articleStats._count.id;
   const totalViews = articleStats._sum.views ?? 0;
@@ -74,7 +74,56 @@ const getTopArticlesByAuthor = async (
   });
 };
 
+/**
+ * Retourne les statistiques globales de la plateforme.
+ * Reserve aux utilisateurs avec le role ADMIN.
+ */
+const getGlobalStats = async () => {
+  const [
+    totalUsers,
+    totalArticles,
+    publishedArticles,
+    totalComments,
+    totalViewsResult,
+    topArticles,
+  ] = await prisma.$transaction([
+    prisma.user.count(),
+    prisma.article.count(),
+    prisma.article.count({ where: { published: true } }),
+    prisma.comment.count(),
+    prisma.article.aggregate({
+      _sum: { views: true },
+    }),
+    prisma.article.findMany({
+      where: { published: true },
+      orderBy: { views: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        views: true,
+        _count: { select: { comments: true } },
+        author: {
+          select: { id: true, username: true },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    totalUsers,
+    totalArticles,
+    publishedArticles,
+    draftArticles: totalArticles - publishedArticles,
+    totalComments,
+    totalViews: totalViewsResult._sum.views ?? 0,
+    topArticles,
+  };
+};
+
 export default {
   getAuthorStats,
   getTopArticlesByAuthor,
+  getGlobalStats,
 };
