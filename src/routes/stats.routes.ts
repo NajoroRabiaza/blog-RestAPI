@@ -5,21 +5,58 @@ import authorize from "../middlewares/authorize";
 
 const router: IRouter = Router();
 
-// GET /stats/me — statistique de l'user connecté
-router.get(
-  "/me",
-  authenticate,
-  statsController.getMyStats
-);
+/**
+ * @swagger
+ * /stats/me:
+ *   get:
+ *     summary: Statistiques de l utilisateur connecte
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques de l auteur connecte
+ *       401:
+ *         description: Non authentifie
+ */
+router.get("/me", authenticate, statsController.getMyStats);
 
-// GET /stats/authors/:authorId — statistiques d'un auteur specifique
-router.get(
-  "/authors/:authorId",
-  authenticate,
-  statsController.getAuthorStats
-);
+/**
+ * @swagger
+ * /stats/authors/{authorId}:
+ *   get:
+ *     summary: Statistiques d un auteur specifique
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: authorId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Statistiques de l auteur
+ *       403:
+ *         description: Acces refuse
+ */
+router.get("/authors/:authorId", authenticate, statsController.getAuthorStats);
 
-// GET /stats/global — statistiques globales, admin uniquement
+/**
+ * @swagger
+ * /stats/global:
+ *   get:
+ *     summary: Statistiques globales de la plateforme, admin uniquement
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques globales
+ *       403:
+ *         description: Reserve aux administrateurs
+ */
 router.get(
   "/global",
   authenticate,
